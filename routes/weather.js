@@ -4,7 +4,7 @@ var router = express.Router();
 const fetch = require('node-fetch');
 const City = require('../models/cities');
 
-const OWM_API_KEY = '4810d2c7945fe82541e351ffa914d368';
+const OWM_API_KEY = process.env.OWM_API_KEY;
 
 router.post('/', (req, res) => {
 	// Check if the city has not already been added
