@@ -20,7 +20,7 @@ router.post('/signup', (req, res) => {
       });
 
       newUser.save().then(() => {
-        res.json({ result: true });
+        res.json({ result: true , User: newUser });
         console.log('User registered');
       });
     } else {
@@ -39,7 +39,7 @@ router.post('/signin', (req, res) => {
 
   User.findOne({ email: req.body.email, password: req.body.password }).then(data => {
     if (data) {
-      res.json({ result: true });
+      res.json({ result: true, user: data });
       console.log('User connected');
     } else {
       res.json({ result: false, error: 'User not found' });

@@ -7,36 +7,38 @@ const City = require('../models/cities');
 const OWM_API_KEY = process.env.OWM_API_KEY;
 
 router.post('/', (req, res) => {
-	// Check if the city has not already been added
-	City.findOne({ cityName: { $regex: new RegExp(req.body.cityName, 'i') } }).then(dbData => {
+	const { cityName, userId } = req.body;
+
+	if (!cityName || !userId) {
+		return res.status(400).json({ result: false, error: "Champs manquants." });
+	}
+
+	City.findOne({ cityName: { $regex: new RegExp(cityName, 'i') }, user: userId }).then(dbData => {
 		if (dbData === null) {
-			// Request OpenWeatherMap API for weather data
-			fetch(`https://api.openweathermap.org/data/2.5/weather?q=${req.body.cityName}&appid=${OWM_API_KEY}&units=metric`)
+			fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${OWM_API_KEY}&units=metric`)
 				.then(response => response.json())
 				.then(apiData => {
-					// Creates new document with weather data
 					const newCity = new City({
-						cityName: req.body.cityName,
+						cityName,
 						main: apiData.weather[0].main,
 						description: apiData.weather[0].description,
 						tempMin: apiData.main.temp_min,
 						tempMax: apiData.main.temp_max,
+						user: userId,
 					});
 
-					// Finally save in database
 					newCity.save().then(newDoc => {
 						res.json({ result: true, weather: newDoc });
 					});
 				});
 		} else {
-			// City already exists in database
 			res.json({ result: false, error: 'City already saved' });
 		}
 	});
 });
 
-router.get('/', (req, res) => {
-	City.find().then(data => {
+router.get('/:userId', (req, res) => {
+	City.find({ user: req.params.userId }).then(data => {
 		res.json({ weather: data });
 	});
 });
@@ -95,6 +97,21 @@ router.post('/position', (req, res) => {
 		.catch(error => {
 			console.error("Erreur fetch météo :", error);
 			res.status(500).json({ result: false, error: "Erreur serveur météo." });
+		});
+});
+
+const City = require('../models/cities'); // ajoute cette ligne en haut si pas encore
+
+router.get('/:userId/cities', (req, res) => {
+	const userId = req.params.userId;
+
+	City.find({ user: userId })
+		.then(cities => {
+			res.json({ result: true, weather: cities });
+		})
+		.catch(err => {
+			console.error("Erreur récupération villes utilisateur :", err);
+			res.status(500).json({ result: false, error: "Erreur serveur" });
 		});
 });
 
