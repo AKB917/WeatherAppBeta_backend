@@ -5,6 +5,8 @@ const User = require('../models/users');
 const { checkBody } = require('../modules/checkBody');
 
 router.post('/signup', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*'); // ou remplace * par l'URL de ton front
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (!checkBody(req.body, ['name', 'email', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
@@ -32,6 +34,10 @@ router.post('/signup', (req, res) => {
 });
 
 router.post('/signin', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(200);
   if (!checkBody(req.body, ['email', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
