@@ -68,4 +68,35 @@ router.delete("/:cityName", (req, res) => {
   });
 });
 
+router.post('/position', (req, res) => {
+	const { latitude, longitude } = req.body;
+
+	if (!latitude || !longitude) {
+		return res.status(400).json({ result: false, error: "Latitude et longitude requises." });
+	}
+
+	fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${OWM_API_KEY}&units=metric`)
+		.then(response => response.json())
+		.then(apiData => {
+			if (!apiData || !apiData.weather) {
+				return res.status(500).json({ result: false, error: "Erreur API météo." });
+			}
+
+			const weather = {
+				cityName: apiData.name,
+				main: apiData.weather[0].main,
+				description: apiData.weather[0].description,
+				tempMin: apiData.main.temp_min,
+				tempMax: apiData.main.temp_max,
+			};
+
+			res.json({ result: true, weather });
+		})
+		.catch(error => {
+			console.error("Erreur fetch météo :", error);
+			res.status(500).json({ result: false, error: "Erreur serveur météo." });
+		});
+});
+
+
 module.exports = router;
