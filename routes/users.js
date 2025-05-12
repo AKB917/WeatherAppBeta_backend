@@ -1,33 +1,19 @@
-const express = require('express');
-const router = express.Router();
+var express = require('express');
+var router = express.Router();
 
 const User = require('../models/users');
+const City = require('../models/cities');
 const { checkBody } = require('../modules/checkBody');
 
-// ✅ Réponse CORS pour requête préflight (OPTIONS)
-router.options('/signup', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Pour développement. En prod, remplace * par ton domaine front
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.sendStatus(200);
-});
-
-router.options('/signin', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.sendStatus(200);
-});
-
-// ✅ Route d'inscription
 router.post('/signup', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // ou remplace * par l'URL de ton front
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (!checkBody(req.body, ['name', 'email', 'password'])) {
-    return res.json({ result: false, error: 'Missing or empty fields' });
+    res.json({ result: false, error: 'Missing or empty fields' });
+    return;
   }
 
+  // Check if the user has not already been registered
   User.findOne({ email: req.body.email }).then(data => {
     if (data === null) {
       const newUser = new User({
@@ -37,23 +23,22 @@ router.post('/signup', (req, res) => {
       });
 
       newUser.save().then(() => {
-        res.json({ result: true, User: newUser });
+        res.json({ result: true , User: newUser });
         console.log('User registered');
       });
     } else {
+      // User already exists in database
       res.json({ result: false, error: 'User already exists' });
       console.log('User already exists');
     }
   });
 });
 
-// ✅ Route de connexion
 router.post('/signin', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
+  
   if (!checkBody(req.body, ['email', 'password'])) {
-    return res.json({ result: false, error: 'Missing or empty fields' });
+    res.json({ result: false, error: 'Missing or empty fields' });
+    return;
   }
 
   User.findOne({ email: req.body.email, password: req.body.password }).then(data => {
@@ -65,6 +50,18 @@ router.post('/signin', (req, res) => {
       console.log('User not found');
     }
   });
+});
+
+// GET /users/:userId/cities
+
+router.get('/:userId/cities', async (req, res) => {
+  try {
+    const cities = await City.find({ user: req.params.userId });
+    res.json({ result: true, weather: cities });
+  } catch (err) {
+    console.error("Erreur récupération villes utilisateur :", err);
+    res.status(500).json({ result: false, error: "Erreur serveur" });
+  }
 });
 
 module.exports = router;

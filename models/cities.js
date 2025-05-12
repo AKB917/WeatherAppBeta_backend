@@ -29,6 +29,10 @@ const citySchema = mongoose.Schema(
       required: true,
       index: true, // Pour accélérer les recherches par user
     },
+    icon: {
+      type: String,
+      required: true,
+    },
   },
   
 );

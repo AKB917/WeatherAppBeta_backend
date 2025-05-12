@@ -25,6 +25,7 @@ router.post('/', (req, res) => {
 						tempMin: apiData.main.temp_min,
 						tempMax: apiData.main.temp_max,
 						user: userId,
+						icon: apiData.weather[0].icon,
 					});
 
 					newCity.save().then(newDoc => {
@@ -37,11 +38,6 @@ router.post('/', (req, res) => {
 	});
 });
 
-router.get('/:userId', (req, res) => {
-	City.find({ user: req.params.userId }).then(data => {
-		res.json({ weather: data });
-	});
-});
 
 router.get("/:cityName", (req, res) => {
   City.findOne({
@@ -55,20 +51,20 @@ router.get("/:cityName", (req, res) => {
   });
 });
 
-router.delete("/:cityName", (req, res) => {
-  City.deleteOne({
-    cityName: { $regex: new RegExp(req.params.cityName, "i") },
-  }).then(deletedDoc => {
-    if (deletedDoc.deletedCount > 0) {
-      // document successfully deleted
-      City.find().then(data => {
-        res.json({ result: true, weather: data });
-      });
-    } else {
-      res.json({ result: false, error: "City not found" });
-    }
+router.delete('/id/:cityId', async (req, res) => {
+	try {
+	  const deleted = await City.findByIdAndDelete(req.params.cityId);
+	  if (deleted) {
+		res.json({ result: true });
+	  } else {
+		res.json({ result: false, error: "City not found" });
+	  }
+	} catch (err) {
+	  console.error("Erreur suppression par ID :", err);
+	  res.status(500).json({ result: false, error: "Erreur serveur" });
+	}
   });
-});
+  
 
 router.post('/position', (req, res) => {
 	const { latitude, longitude } = req.body;
@@ -90,6 +86,7 @@ router.post('/position', (req, res) => {
 				description: apiData.weather[0].description,
 				tempMin: apiData.main.temp_min,
 				tempMax: apiData.main.temp_max,
+				icon: apiData.weather[0].icon,
 			};
 
 			res.json({ result: true, weather });
@@ -100,7 +97,7 @@ router.post('/position', (req, res) => {
 		});
 });
 
-const City = require('../models/cities'); // ajoute cette ligne en haut si pas encore
+
 
 router.get('/:userId/cities', (req, res) => {
 	const userId = req.params.userId;
