@@ -1,7 +1,8 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-const app = require('../app');
+router.get('/', (req, res) => {
+  res.send('Weather API is running.');
+});
 
 module.exports = router;
-
